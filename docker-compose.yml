@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  screeps:
+    image: screepers/screeps-launcher:latest
+    container_name: screeps-server
+    restart: unless-stopped
+    volumes:
+      - ./config.yml:/screeps/config.yml
+      - ./mods.json:/screeps/mods.json
+      - screeps-data:/screeps
+    ports:
+      - '21025:21025' # Game server port
+      - '21026:21026' # CLI admin port
+    depends_on:
+      - mongo
+      - redis
+    environment:
+      - MONGO_HOST=mongo
+      - REDIS_HOST=redis
+      - ADMIN_PSW=${ADMIN_PSW}
+
+  mongo:
+    image: mongo:4.4
+    container_name: screeps-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    command: mongod --quiet --logpath /dev/null # Reduce log noise
+
+  redis:
+    image: redis:alpine
+    container_name: screeps-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+volumes:
+  screeps-data:
+  mongo-data:
+  redis-data:
