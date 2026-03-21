@@ -114,6 +114,7 @@ storage.db.users.update(
 );
 
 // Spawn NPC market orders (useful since no real players exist)
+
 Game.market.createOrder({
   type: ORDER_SELL,
   resourceType: RESOURCE_ENERGY,
