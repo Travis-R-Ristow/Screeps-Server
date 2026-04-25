@@ -1,74 +1,40 @@
 # Screeps Private Server Configuration
 # Documentation: https://github.com/screepers/screeps-launcher
-# Configured to match OFFICIAL MMO settings for accurate testing
-#
-# GOAL: This server should behave identically to the official Screeps MMO
-# so code tested here can be deployed to the live server with confidence.
 
-# Leave blank or set a valid Steam Web API key (https://steamcommunity.com/dev/apikey)
-# Only needed if steamApi.enabled is true below
-# steamKey: ''
+# Node.js version - REQUIRED: screeps@4.3.0 needs Node >=22.9.0
+nodeVersion: "Jod"
 
-# Server runner settings
-runners:
-  processors: 4
-  main: 1
+# Environment variables passed to child processes
+env:
+  shared:
+    MODFILE: mods.json
+    STORAGE_HOST: redis
+    STORAGE_PORT: "21027"
+  backend:
+    GAME_HOST: 0.0.0.0
+    GAME_PORT: "21025"
+    CLI_HOST: 0.0.0.0
+    CLI_PORT: "21026"
+    ASSET_DIR: assets
+  engine:
+    DRIVER_MODULE: "@screeps/driver"
+  storage: {}
 
-# Tick rate (in milliseconds)
-# Official server: ~3000-4500ms per tick (variable under load)
-# Set to 1000 for faster local testing. Increase if your machine struggles.
-tickRate: 1000
+# Pin packages to prevent compatibility issues
+pinnedPackages:
+  ssri: 8.0.1
+  cacache: 15.3.0
+  passport-steam: 1.0.17
+  minipass-fetch: 2.1.2
+  express-rate-limit: 6.7.0
 
-# CLI server settings (for admin commands)
-cliPort: 21026
-
-# Storage settings
-storage:
-  db:
-    host: mongo
-    port: 27017
-  redis:
-    host: redis
-    port: 6379
-
-# Server options - configured to match official Screeps MMO
-serverConfig:
-  # Steam authentication (set to true + provide steamKey for Steam-based login)
-  steamApi:
-    enabled: false
-
-  # ---------------------------------------------------------------------------
-  # GAME CONSTANTS — Official MMO Values
-  # ---------------------------------------------------------------------------
-  # The engine defaults already match official. Only override here if you need
-  # to fix a drift between the engine version and current official values.
-  # Uncomment and adjust ONLY if the engine default differs from live MMO.
-  # ---------------------------------------------------------------------------
-  # constants:
-  #   GCL_POW: 2.4
-  #   GCL_MULTIPLY: 1000000
-  #   GCL_NOVICE: 3
-  #   POWER_LEVEL_MULTIPLY: 1000
-  #   POWER_LEVEL_POW: 2
-  #   POWER_CREEP_MAX_LEVEL: 25
-  #   MARKET_FEE: 0.05
-  #   TERMINAL_COOLDOWN: 10
-  #   INVADERS_ENERGY_GOAL: 100000
-  #   STRONGHOLD_DECAY_TICKS: 75000
-
-  # ---------------------------------------------------------------------------
-  # WELCOME / RESPAWN ZONES — Matches official behavior
-  # ---------------------------------------------------------------------------
-  # On official, new players spawn in open areas. Private server handles this
-  # automatically but you can adjust respawn timers if needed.
-  welcomeText: 'Welcome to the private test server — configured for official MMO parity.'
-
-# Admin credentials for CLI access (loaded from .env file, not committed to git)
-adminPassword: '${ADMIN_PSW}'
-
-# Mods to load — all required for official MMO feature parity
+# Mods to load
 mods:
-  - screepsmod-auth # Password authentication for private server login
-  - screepsmod-admin-utils # Admin CLI commands and utilities
-  - screepsmod-mongo # MongoDB storage backend (required for proper DB integration)
-  - screepsmod-features # Power Creeps, Factories, Deposits, Commodities, Strongholds
+  - screepsmod-auth
+  - screepsmod-admin-utils
+  - screepsmod-mongo
+
+# Server options (requires screepsmod-admin-utils)
+serverConfig:
+  tickRate: 1000
+  welcomeText: 'Welcome to the private test server — configured for official MMO parity.'

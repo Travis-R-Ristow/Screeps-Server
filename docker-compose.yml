@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   screeps:
-    image: screepers/screeps-launcher:latest
+    build: .
     container_name: screeps-server
     restart: unless-stopped
     volumes:
@@ -10,8 +8,8 @@ services:
       - ./mods.json:/screeps/mods.json
       - screeps-data:/screeps
     ports:
-      - '21025:21025' # Game server port
-      - '21026:21026' # CLI admin port
+      - '21025:21025' # Game server port (public)
+      - '127.0.0.1:21026:21026' # CLI admin port (host loopback only — unauthenticated)
     depends_on:
       - mongo
       - redis
@@ -19,6 +17,17 @@ services:
       - MONGO_HOST=mongo
       - REDIS_HOST=redis
       - ADMIN_PSW=${ADMIN_PSW}
+      - STEAM_KEY=${STEAM_API_KEY}
+      # Required env vars for screeps backend (launcher should set these but doesn't)
+      - MODFILE=mods.json
+      - STORAGE_HOST=redis
+      - STORAGE_PORT=21027
+      - CLI_PORT=21026
+      - CLI_HOST=0.0.0.0
+      - GAME_PORT=21025
+      - GAME_HOST=0.0.0.0
+      - ASSET_DIR=assets
+      - DRIVER_MODULE=@screeps/driver
 
   mongo:
     image: mongo:4.4

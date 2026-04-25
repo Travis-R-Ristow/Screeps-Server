@@ -11,10 +11,10 @@ This server is configured to replicate the official Screeps MMO environment:
 | Game Constants       | ✅     | Engine defaults match official values                 |
 | Source Keepers       | ✅     | Present in SK rooms (within 4 tiles of sector center) |
 | NPC Invaders         | ✅     | Spawn based on energy harvested                       |
-| Power Creeps         | ✅     | Enabled via `screepsmod-features`                     |
-| Factories            | ✅     | Enabled via `screepsmod-features`                     |
-| Commodities/Deposits | ✅     | Enabled via `screepsmod-features`                     |
-| Strongholds          | ✅     | Enabled via `screepsmod-features`                     |
+| Power Creeps         | ✅     | Built-in engine feature (screeps v4+)                 |
+| Factories            | ✅     | Built-in engine feature (screeps v4+)                 |
+| Commodities/Deposits | ✅     | Built-in engine feature (screeps v4+)                 |
+| Strongholds          | ✅     | Built-in engine feature (screeps v4+)                 |
 | Market/Terminal      | ✅     | Built-in engine feature                               |
 | Power Banks          | ✅     | Spawn in highway rooms                                |
 | MongoDB Backend      | ✅     | Via `screepsmod-mongo`                                |
@@ -42,17 +42,25 @@ Your code will behave the same on official, but watch out for these edge cases:
 ## Prerequisites
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+- [Node.js](https://nodejs.org/) installed (for the init script)
 - Git (optional, for version control)
 
 ## Quick Start
 
 ### 1. Start the Server
 
-```bash
-docker-compose up -d
+```powershell
+./start.ps1
 ```
 
-This launches all three containers (Screeps, MongoDB, Redis) in the background.
+This starts the Docker containers and automatically initialises the world if needed (skips if rooms already exist).
+
+Or run the steps manually:
+
+```bash
+docker compose up -d
+node init-world.js
+```
 
 ### 2. Connect to Your Server
 
@@ -64,20 +72,21 @@ In the Screeps game client:
 
 ## Management Commands
 
-| Action       | Command                          | Description                           |
-| ------------ | -------------------------------- | ------------------------------------- |
-| Start Server | `docker-compose up -d`           | Launches all containers in background |
-| Stop Server  | `docker-compose down`            | Safely shuts down (data preserved)    |
-| View Logs    | `docker-compose logs -f screeps` | Follow server logs                    |
-| Restart      | `docker-compose restart`         | Apply config changes                  |
-| Rebuild      | `docker-compose up -d --build`   | Rebuild containers                    |
+| Action          | Command                          | Description                                  |
+| --------------- | -------------------------------- | -------------------------------------------- |
+| Start Server    | `docker compose up -d`           | Launches all containers in background        |
+| Stop Server     | `docker compose down`            | Safely shuts down (data preserved)           |
+| View Logs       | `docker compose logs -f screeps` | Follow server logs                           |
+| Restart         | `docker compose restart`         | Apply config changes                         |
+| Rebuild         | `docker compose up -d --build`   | Rebuild containers                           |
+| Pause / Resume  | `./toggle-sim.ps1`               | Toggle the simulation (also: `pause`/`resume`/`status`) |
 
 ## CLI Administration
 
 Access the Screeps CLI for admin commands:
 
 ```bash
-docker-compose exec screeps screeps-launcher cli
+docker compose exec screeps screeps-launcher cli
 ```
 
 ### Common CLI Commands
@@ -140,30 +149,21 @@ Main server configuration — tuned for official MMO parity:
 
 ### mods.json
 
-Defines which mods to install:
+Defines which mods to load. Must stay in sync with the `mods:` list in `config.yml`.
 
-| Mod                      | Purpose                                        |
-| ------------------------ | ---------------------------------------------- |
-| `screepsmod-auth`        | Password authentication (replaces Steam auth)  |
-| `screepsmod-admin-utils` | Admin CLI commands and utilities               |
-| `screepsmod-mongo`       | MongoDB storage backend                        |
-| `screepsmod-features`    | Power Creeps, Factories, Deposits, Strongholds |
+| Mod                      | Purpose                                       |
+| ------------------------ | --------------------------------------------- |
+| `screepsmod-auth`        | Password authentication (replaces Steam auth) |
+| `screepsmod-admin-utils` | Admin CLI commands and utilities              |
+| `screepsmod-mongo`       | MongoDB storage backend                       |
 
-### Installed Mods
-
-All mods listed in both `config.yml` and `mods.json` — they must stay in sync.
-
-| Mod                      | Description                                    |
-| ------------------------ | ---------------------------------------------- |
-| `screepsmod-auth`        | Password authentication                        |
-| `screepsmod-admin-utils` | Admin commands                                 |
-| `screepsmod-mongo`       | MongoDB storage backend                        |
-| `screepsmod-features`    | Power Creeps, Factories, Deposits, Strongholds |
+> Power Creeps, Factories, Deposits, Commodities, and Strongholds are all
+> built into the screeps v4+ engine — no extra mod is required.
 
 To add a mod, add it to both `config.yml` and `mods.json`, then restart:
 
 ```bash
-docker-compose restart
+docker compose restart
 ```
 
 ## Data Persistence
@@ -177,7 +177,7 @@ All data is stored in Docker volumes:
 To completely reset (delete all data):
 
 ```bash
-docker-compose down -v
+docker compose down -v
 ```
 
 ## Troubleshooting
@@ -185,7 +185,7 @@ docker-compose down -v
 ### Server won't start
 
 ```bash
-docker-compose logs screeps
+docker compose logs screeps
 ```
 
 ### Port already in use
@@ -202,7 +202,7 @@ ports:
 Use the CLI:
 
 ```bash
-docker-compose exec screeps screeps-launcher cli
+docker compose exec screeps screeps-launcher cli
 > system.resetAllData()
 ```
 
@@ -211,7 +211,11 @@ docker-compose exec screeps screeps-launcher cli
 ```
 Screeps/
 ├── docker-compose.yml   # Container orchestration
+├── Dockerfile           # Custom screeps-launcher image
 ├── config.yml           # Server configuration
 ├── mods.json            # Mod list
+├── init-world.js        # World seed script (idempotent)
+├── start.ps1            # One-shot launcher: start + init
+├── .env                 # Secrets (STEAM_API_KEY, ADMIN_PSW) — not committed
 └── README.md            # This file
 ```
